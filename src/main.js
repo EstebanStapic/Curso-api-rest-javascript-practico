@@ -16,13 +16,16 @@ function createMovies(movies, container) {
     movies.forEach(movie => {
         const movieContainer = document.createElement('div');
         movieContainer.classList.add('movie-container');
+        movieContainer.addEventListener("click", () => {
+            location.hash = `movie=${movie.id}`;
+        })
 
         const movieImg = document.createElement('img');
         movieImg.classList.add('movie-img');
         movieImg.setAttribute('alt', movie.title);
         movieImg.setAttribute(
         'src',
-        'https://image.tmdb.org/t/p/w300' + movie.poster_path,);
+        'https://image.tmdb.org/t/p/w300' + movie.poster_path);
 
         movieContainer.appendChild(movieImg);
         container.appendChild(movieContainer);
@@ -57,7 +60,8 @@ function createCategories(categories,container) {
     async function getTrendingMoviesPreview() {
         const { data } = await api('trending/movie/day');
         const movies = data.results;
-        
+        // console.log(movies)
+
         createMovies(movies, trendingMoviesPreviewList);
     };
 
@@ -96,4 +100,32 @@ function createCategories(categories,container) {
         const movies = data.results;
 
         createMovies(movies, genericSection);
+    }
+    async function getMovieById(id) {
+        const { data: movie } = await api(`movie/${id}`)
+
+        const movieImgUrl = 'https://image.tmdb.org/t/p/w500' + movie.poster_path;
+        // console.log(movieImgUrl)
+        headerSection.style.background = `
+        linear-gradient(
+            180deg, 
+            rgba(0, 0, 0, 0.35) 19.27%, 
+            rgba(0, 0, 0, 0) 29.17%
+            ),
+        url(${movieImgUrl})
+        `;
+
+        movieDetailTitle.textContent = movie.title;
+        movieDetailDescription.textContent = movie.overview;
+        movieDetailScore.textContent = movie.vote_average;
+
+        createCategories(movie.genres, movieDetailCategoriesList)
+        getRelatedMoviesId(id)
+    }
+
+    async function getRelatedMoviesId(id) {
+        const { data } = await api(`movie/${id}/recommendations`);
+        const relatedMovies = data.results;
+
+        createMovies(relatedMovies, relatedMoviesContainer); 
     }
